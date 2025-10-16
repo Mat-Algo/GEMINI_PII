@@ -74,71 +74,40 @@ You are a professional resume anonymizer. Your task is to remove ALL personally 
    - All dates and durations
    - All metrics, numbers, and percentages (except PII numbers)
    - All certifications and course names
-   - All professional language exactly as written
    - All bullet points and descriptions word-for-word
 
-3. Return response as valid JSON only with this exact structure:
-{
-  "summary": "professional summary text here (or empty string if not present)",
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "duration": "Jan 2020 - Present",
-      "location": "Metropolitan Area",
-      "responsibilities": [
-        "First responsibility exactly as written",
-        "Second responsibility exactly as written"
-      ]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree Name",
-      "institution": "University Name",
-      "duration": "2016 - 2020",
-      "location": "Metropolitan Area",
-      "details": "Any additional details exactly as written"
-    }
-  ],
-  "skills": {
-    "technical": ["skill1", "skill2", "skill3"],
-    "other": ["skill1", "skill2"]
-  },
-  "projects": [
-    {
-      "name": "Project Name",
-      "description": "Full description exactly as written",
-      "technologies": ["tech1", "tech2"]
-    }
-  ],
-  "certifications": [
-    {
-      "name": "Certification Name",
-      "issuer": "Issuing Organization",
-      "date": "Month Year"
-    }
-  ],
-  "awards": ["Award 1 exactly as written", "Award 2 exactly as written"],
-  "publications": ["Publication 1 exactly as written"],
-  "languages": ["Language 1: Proficiency", "Language 2: Proficiency"],
-  "volunteer": [
-    {
-      "role": "Volunteer Role",
-      "organization": "Organization Name",
-      "duration": "dates",
-      "description": "Description exactly as written"
-    }
-  ],
-  "piiRemoved": 15
-}
+3. OUTPUT FORMAT (STRICT JSON):
+Return ONLY valid JSON with:
+- A dynamic sections array that mirrors the original resume’s section titles and order exactly as they appear (preserve casing and punctuation). Each element has:
+  {
+    "title": "Section title exactly from resume",
+    "type": "experience|education|projects|skills|languages|certifications|awards|volunteer|paragraphs|bullets|entries",
+    // Content shape depends on type:
+    // paragraphs: { "paragraphs": [ "para1", "para2", ... ] }
+    // bullets:    { "bullets": [ "bullet1", "bullet2", ... ] }
+    // experience: { "items": [ { "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["...", "..."] } ] }
+    // education:  { "items": [ { "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." } ] }
+    // projects:   { "items": [ { "name": "...", "description": "...", "technologies": ["...","..."] } ] }
+    // skills:     { "technical": ["..."], "other": ["..."] }
+    // languages:  { "bullets": ["Language: Proficiency", "..."] }
+    // certifications/awards/volunteer/publications may use "bullets" or "items" with sensible fields:
+    // entries:    { "items": [ { "title"|"name"|"role": "...", "organization"|"institution": "...", "duration": "...", "location": "Metropolitan Area", "description": "...", "technologies": ["..."] } ] }
+  }
 
-**IMPORTANT:** 
-- Return ONLY valid JSON, no markdown formatting, no code blocks, no extra text
-- Keep ALL original wording and phrasing for non-PII content
-- Do not add, embellish, or modify any professional content
-- Empty sections should be empty arrays [] or empty strings ""
-- piiRemoved should be an integer count of PII items removed
+- AND include the legacy fields for backward compatibility:
+  "summary", "experience", "education", "skills", "projects", "certifications", "awards", "publications", "languages", "volunteer", "piiRemoved"
+
+Notes:
+- It is OK if the dynamic sections duplicate content that also appears in the legacy fields.
+- If a section in the resume does not fit any known type, set "type": "bullets" with its bullet list, or "type": "paragraphs" with text blocks.
+- Preserve the resume’s original section order under "sections".
+
+**IMPORTANT:**
+- Return ONLY JSON (no markdown, no code fences, no extra commentary)
+- Keep ALL original wording for non-PII content
+- Use empty arrays [] or empty strings "" where applicable
+- "piiRemoved" is an integer count of PII items removed
+- Make sure you do not rephrase, reduce, or add extra anything but you can correct spelling mistakes if any which would have occured during text extraction.
 
 Here is the resume text to anonymize:
 
