@@ -108,6 +108,8 @@ Notes:
 - Use empty arrays [] or empty strings "" where applicable
 - "piiRemoved" is an integer count of PII items removed
 - Make sure you do not rephrase, reduce, or add extra anything but you can correct spelling mistakes if any which would have occured during text extraction.
+- Make sure to fix errors like :
+  c ustomer -> customer, E EG-> EEG, T oyota -> Toyota
 
 Here is the resume text to anonymize:
 
