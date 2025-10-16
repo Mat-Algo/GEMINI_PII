@@ -110,11 +110,7 @@ Each section in `sections` must include:
 }
 
 
-- AND include the legacy fields for backward compatibility:
-  "summary", "experience", "education", "skills", "projects", "certifications", "awards", "publications", "languages", "volunteer", "piiRemoved"
-
 Notes:
-- It is OK if the dynamic sections duplicate content that also appears in the legacy fields.
 - If a section in the resume does not fit any known type, set "type": "bullets" with its bullet list, or "type": "paragraphs" with text blocks.
 - Preserve the resume’s original section order under "sections".
 
@@ -206,6 +202,7 @@ def anonymize(payload: AnonymizeRequest):
             raise RuntimeError("No response text from Gemini")
 
         cleaned = _strip_code_fences(generated_text)
+        print(cleaned)
 
         try:
             parsed = json.loads(cleaned)
