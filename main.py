@@ -150,7 +150,7 @@ Each object inside sections must follow this structure:
 - Use empty arrays or strings if needed, but never null or undefined
 - Do NOT return: [object Object], "undefined", or broken JSON
 - NEVER include: Markdown, code fences, or commentary — just pure JSON
-- Do not add anythign from your side but make SURE EVERYTHING from the resume is included except PII
+- Do not add anything from your side but make SURE EVERYTHING from the resume is included except PII
 - Do NOT hallucinate new sections, skills, or roles — only include what’s actually in the input
 
 ---
