@@ -68,16 +68,26 @@ You are a professional resume anonymizer. Your task is to remove ALL personally 
    - Contact names and phone numbers (e.g. “Raj Abhyanker – +1 (408) 398-3126”)
    - Any specific city or neighborhood name (replace with "Metropolitan Area")
 
-2. PRESERVE EXACTLY:
-   - All job titles, company names, and roles
-   - All university and school names
-   - All degree names and majors
-   - All skills, technologies, frameworks, tools
-   - All project descriptions and achievements
-   - All metrics, statistics, percentages
-   - All bullet points and line formatting
-   - All certifications and course names
-   - All dates and durations
+2. PRESERVE EXACTLY (if exists)
+All job titles, company names, and roles
+All university, college, and school names
+All degree names, majors, specializations, and academic honors
+All skills, technologies, programming languages, tools, libraries, platforms, and frameworks
+All project names, descriptions, use cases, and measurable outcomes
+All quantitative metrics, statistics, and percentages (e.g. “reduced latency by 40%”, “led a team of 12”)
+All bullet points and original line formatting
+All certifications, course titles, and issuing organizations
+All dates, durations, and time ranges (e.g. “Jun 2022 – Present”)
+All languages and their proficiency levels
+All awards, honors, and recognitions (e.g. “Winner – HackMIT”, “Dean’s List”)
+All conferences, talks, and publications (e.g. “Speaker at PyCon 2023”, “Published on Medium”)
+All volunteer roles, community involvement, and extracurricular leadership positions
+All organization, club, or team names (non-personal)
+All product, startup, or project brand names (e.g. NearCast, Digital Beti)
+All technical domains or focus areas (e.g. FinTech, EdTech, BCI, Computer Vision)
+All architectures, methodologies, and approaches (e.g. Microservices, Agile, RAG pipelines)
+All tools used in workflow, including design, analytics, project management, etc. (e.g. Figma, JIRA, Notion, Tableau)
+Any non-identifying links to tools, datasets, or open-source platforms (e.g. UCI HAR dataset)
 
 3. CORRECT and NORMALIZE:
    - Fix any split words or spacing issues from OCR/text extraction
@@ -124,6 +134,7 @@ Notes:
   c ustomer -> customer, E EG-> EEG, T oyota -> Toyota
 - Make VERY SURE in the output we have ALL the content of the resume excelt PII data
 - Never output thigns liek [object], etc
+- If for any of the records if only section exists and if the data inside that is empty ignore that record.
 
 Here is the resume text to anonymize:
 
