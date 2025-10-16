@@ -140,31 +140,6 @@ def _strip_code_fences(text: str) -> str:
     t = re.sub(r'\s*```$', '', t)
     return t.strip()
 
-def _validate_and_fill(parsed: Dict[str, Any]) -> Dict[str, Any]:
-    """Ensure all expected keys exist with safe defaults."""
-    if not isinstance(parsed, dict):
-        raise ValueError("AI response is not a JSON object")
-
-    skills = parsed.get("skills") or {}
-    if not isinstance(skills, dict):
-        skills = {}
-    skills.setdefault("technical", [])
-    skills.setdefault("other", [])
-
-    return {
-        "summary": parsed.get("summary", "") or "",
-        "experience": parsed.get("experience", []) if isinstance(parsed.get("experience"), list) else [],
-        "education": parsed.get("education", []) if isinstance(parsed.get("education"), list) else [],
-        "skills": skills,
-        "projects": parsed.get("projects", []) if isinstance(parsed.get("projects"), list) else [],
-        "certifications": parsed.get("certifications", []) if isinstance(parsed.get("certifications"), list) else [],
-        "awards": parsed.get("awards", []) if isinstance(parsed.get("awards"), list) else [],
-        "publications": parsed.get("publications", []) if isinstance(parsed.get("publications"), list) else [],
-        "languages": parsed.get("languages", []) if isinstance(parsed.get("languages"), list) else [],
-        "volunteer": parsed.get("volunteer", []) if isinstance(parsed.get("volunteer"), list) else [],
-        "piiRemoved": parsed.get("piiRemoved", 0) if isinstance(parsed.get("piiRemoved", 0), int) else 0,
-    }
-
 # ---------------------------
 # Routes
 # ---------------------------
@@ -179,7 +154,7 @@ def anonymize(payload: AnonymizeRequest):
     if not resume_text or not isinstance(resume_text, str):
         raise HTTPException(status_code=400, detail="Invalid request: resumeText is required")
 
-    if len(resume_text) < 50:
+    if len(resume_text.strip()) < 50:
         raise HTTPException(status_code=400, detail="Resume text is too short")
 
     prompt = PROMPT_TEMPLATE.replace("{RESUME_TEXT}", resume_text)
@@ -189,10 +164,8 @@ def anonymize(payload: AnonymizeRequest):
             model=MODEL_NAME,
             contents=prompt,
             config=types.GenerateContentConfig(
-                # Disable "thinking" for speed/cost parity with your Node version
                 thinking_config=types.ThinkingConfig(thinking_budget=0),
                 temperature=0.1,
-                # Encourage strict JSON
                 response_mime_type="application/json",
             ),
         )
@@ -202,21 +175,27 @@ def anonymize(payload: AnonymizeRequest):
             raise RuntimeError("No response text from Gemini")
 
         cleaned = _strip_code_fences(generated_text)
-        print(cleaned)
+        print(cleaned)  # Optional: for debugging in logs
 
         try:
             parsed = json.loads(cleaned)
         except json.JSONDecodeError:
-            sample = cleaned[:600]
-            raise HTTPException(status_code=500, detail=f"Failed to parse AI response as JSON. Sample: {sample}")
+            raise HTTPException(status_code=500, detail="Failed to parse Gemini response as JSON")
 
-        validated = _validate_and_fill(parsed)
-        return JSONResponse(validated)
+        # Strictly require `sections` and `piiRemoved`
+        if "sections" not in parsed or "piiRemoved" not in parsed:
+            raise HTTPException(status_code=500, detail="Missing required fields in Gemini response")
+
+        return JSONResponse({
+            "sections": parsed["sections"],
+            "piiRemoved": parsed["piiRemoved"]
+        })
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to anonymize resume: {str(e)}")
+
 
 # Local dev entrypoint (Render uses startCommand)
 if __name__ == "__main__":
