@@ -110,13 +110,24 @@ Each section in `sections` must include:
 }
 
 
+- AND include the legacy fields for backward compatibility:
+  "summary", "experience", "education", "skills", "projects", "certifications", "awards", "publications", "languages", "volunteer", "piiRemoved"
+
+Notes:
+- It is OK if the dynamic sections duplicate content that also appears in the legacy fields.
+- If a section in the resume does not fit any known type, set "type": "bullets" with its bullet list, or "type": "paragraphs" with text blocks.
+- Preserve the resume’s original section order under "sections".
+
 **IMPORTANT:**
 - Return ONLY JSON (no markdown, no code fences, no extra commentary)
-- Preserve the resume’s original section order under "sections".
 - Keep ALL original wording for non-PII content
 - Use empty arrays [] or empty strings "" where applicable
 - "piiRemoved" is an integer count of PII items removed
 - Make sure you do not rephrase, reduce, or add extra anything but you can correct spelling mistakes if any which would have occured during text extraction.
+- Make sure to fix errors like :
+  c ustomer -> customer, E EG-> EEG, T oyota -> Toyota
+- Make VERY SURE in the output we have ALL the content of the resume excelt PII data
+- Never output thigns liek [object], etc
 
 Here is the resume text to anonymize:
 
