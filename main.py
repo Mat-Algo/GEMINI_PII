@@ -206,7 +206,6 @@ def anonymize(payload: AnonymizeRequest):
             raise RuntimeError("No response text from Gemini")
 
         cleaned = _strip_code_fences(generated_text)
-        print(cleaned)  # Optional: for debugging in logs
 
         try:
             parsed = json.loads(cleaned)
