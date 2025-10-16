@@ -50,92 +50,111 @@ class AnonymizeRequest(BaseModel):
 # Prompt Template
 # ---------------------------
 PROMPT_TEMPLATE = """
-You are a professional resume anonymizer. Your task is to remove ALL personally identifiable information (PII) from the following resume while preserving ALL other content exactly as written.
+You are a professional resume anonymizer. Your task is to remove ALL personally identifiable information (PII) from the following resume while preserving ALL non-PII content exactly as written.
 
 ---
 
-**CRITICAL RULES**
+🔒 CRITICAL RULES
 
 1. REMOVE ONLY the following PII elements:
-   - Full name (first name, middle name, last name)
-   - Email addresses (all formats)
-   - Phone numbers (all formats and countries)
-   - Physical addresses (street, city, state, zip/postal codes)
-   - Website URLs and domains (LinkedIn, GitHub, personal sites, etc.)
-   - Social media handles (Twitter, Instagram, Stack Overflow, etc.)
-   - Government IDs (SSN, Aadhaar, PAN, Passport numbers)
-   - Credential or certification IDs
-   - Contact names and phone numbers (e.g. “Raj Abhyanker – +1 (408) 398-3126”)
-   - Any specific city or neighborhood name (replace with "Metropolitan Area")
+- Full name (first name, middle name, last name)
+- Email addresses (all formats)
+- Phone numbers (all formats and countries)
+- Physical addresses (street, city, state, zip/postal codes)
+- Website URLs and domains (LinkedIn, GitHub, personal sites, etc.)
+- Social media handles (Twitter, Instagram, Stack Overflow, etc.)
+- Government-issued IDs (SSN, Aadhaar, PAN, Passport numbers)
+- Credential or certification IDs (e.g. Coursera, Google IDs)
+- Contact references (e.g. “Raj Abhyanker – +1 (408) 398-3126”)
+- Specific location mentions (city/town/neighborhood) → replace with "Metropolitan Area"
 
-2. PRESERVE EXACTLY (if exists)
-All job titles, company names, and roles
-All university, college, and school names
-All degree names, majors, specializations, and academic honors
-All skills, technologies, programming languages, tools, libraries, platforms, and frameworks
-All project names, descriptions, use cases, and measurable outcomes
-All quantitative metrics, statistics, and percentages (e.g. “reduced latency by 40%”, “led a team of 12”)
-All bullet points and original line formatting
-All certifications, course titles, and issuing organizations
-All dates, durations, and time ranges (e.g. “Jun 2022 – Present”)
-All languages and their proficiency levels
-All awards, honors, and recognitions (e.g. “Winner – HackMIT”, “Dean’s List”)
-All conferences, talks, and publications (e.g. “Speaker at PyCon 2023”, “Published on Medium”)
-All volunteer roles, community involvement, and extracurricular leadership positions
-All organization, club, or team names (non-personal)
-All product, startup, or project brand names (e.g. NearCast, Digital Beti)
-All technical domains or focus areas (e.g. FinTech, EdTech, BCI, Computer Vision)
-All architectures, methodologies, and approaches (e.g. Microservices, Agile, RAG pipelines)
-All tools used in workflow, including design, analytics, project management, etc. (e.g. Figma, JIRA, Notion, Tableau)
-Any non-identifying links to tools, datasets, or open-source platforms (e.g. UCI HAR dataset)
+2. PRESERVE EXACTLY (if present):
+- All job titles, company names, and role designations
+- All university, college, and school names — across any level of education
+- All degrees, majors, minors, specializations, academic honors (e.g. GPA, "Summa Cum Laude")
+- All skills, technologies, languages, frameworks, tools, platforms, libraries
+- All project titles, descriptions, outcomes, and features
+- All quantitative metrics (e.g. "reduced costs by 30%", "led a 12-member team")
+- All line breaks, bullet points, and original resume formatting
+- All certifications, course names, and issuing organizations
+- All dates, durations, and timeframes (e.g. "Jun 2022 – Present", "3 months")
+- All language proficiencies (e.g. "Fluent", "Native Proficiency")
+- All awards, honors, recognitions, hackathon wins, etc.
+- All conferences, publications, speaking engagements, talks
+- All volunteer positions, extracurricular leadership, committee involvement
+- All organizations, clubs, student teams, initiatives, and affiliations
+- All startups, products, and project brand names (e.g. "Digital Beti", "NearCast")
+- All domains of focus (e.g. "BioTech", "AI Safety", "Human-Computer Interaction")
+- All architectures, workflows, and methodologies (e.g. "Agile", "RAG", "CI/CD")
+- All tools used in process (e.g. Figma, Notion, Jira, Tableau, Looker Studio)
+- Any non-identifying dataset, repo, or tool links (e.g. "UCI HAR dataset", "OpenAI Cookbook")
 
-3. CORRECT and NORMALIZE:
-   - Fix any split words or spacing issues from OCR/text extraction
-     e.g., "c ustomer" → "customer", "T oyota" → "Toyota", "Josh Skill, bsc YIT" → proper tokens
-   - Fix common typos or broken lines where possible
-   - Do not rephrase meaningful content
+3. CORRECT and NORMALIZE text:
+- Fix any spacing, word breaks, or tokenization issues from PDF/OCR extraction  
+  e.g. "c ustomer" → "customer", "T oyota" → "Toyota", "E xcel" → "Excel"
+- Fix obvious typos or broken lines ONLY if clearly wrong  
+  Do not rephrase or paraphrase any content
+- Normalize common resume content artifacts (e.g. "Josh Skill, bsc YIT" → properly parsed text)
 
 ---
 
-**OUTPUT FORMAT (STRICT JSON)**
+🔧 OUTPUT FORMAT — STRICT JSON
 
-Return **ONLY valid JSON** containing:
-- `sections`: an array that preserves **original section titles and order** from the resume
-- `summary`, `experience`, `education`, `skills`, `projects`, `certifications`, `awards`, `publications`, `languages`, `volunteer` — legacy fields for compatibility
-- `piiRemoved`: integer number of PII items redacted
+Return a single, valid JSON object with the following fields:
 
-Each section in `sections` must include:
-```json
+Top-Level Keys:
 {
-  "title": "Exact Section Title From Resume",
-  "type": "experience|education|projects|skills|languages|certifications|awards|volunteer|paragraphs|bullets|entries",
-  // Content shape based on type:
-  // paragraphs: { "paragraphs": ["..."] }
-  // bullets: { "bullets": ["..."] }
-  // experience: { "items": [ { "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["..."] } ] }
-  // education: { "items": [ { "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." } ] }
-  // projects: { "items": [ { "name": "...", "description": "...", "technologies": ["..."] } ] }
-  // skills: { "technical": ["..."], "other": ["..."] }
-  // entries: { "items": [ { "title|name|role": "...", "organization": "...", "duration": "...", "description": "...", "location": "Metropolitan Area" } ] }
+  "sections": [ ... ],
+  "summary": [],
+  "experience": [],
+  "education": [],
+  "skills": [],
+  "projects": [],
+  "certifications": [],
+  "awards": [],
+  "publications": [],
+  "languages": [],
+  "volunteer": [],
+  "piiRemoved": 0
 }
 
+- sections: List of parsed resume sections in original order
+- piiRemoved: Integer count of PII elements that were redacted
+- Legacy fields (summary, experience, etc.) should mirror data from sections where applicable for compatibility
 
-Notes:
-- If a section in the resume does not fit any known type, set "type": "bullets" with its bullet list, or "type": "paragraphs" with text blocks.
-- Preserve the resume’s original section order under "sections".
+EACH SECTION OBJECT:
+Each object inside sections must follow this structure:
+{
+  "title": "Original Section Header (as in resume)",
+  "type": "experience|education|projects|skills|languages|certifications|awards|volunteer|paragraphs|bullets|entries",
+  
+  // Content shape by type:
+  // paragraphs:       { "paragraphs": ["..."] }
+  // bullets:          { "bullets": ["..."] }
+  // experience:       { "items": [{ "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["..."] }] }
+  // education:        { "items": [{ "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." }] }
+  // projects:         { "items": [{ "name": "...", "description": "...", "technologies": ["..."] }] }
+  // skills:           { "technical": ["..."], "other": ["..."] }
+  // languages:        { "items": [{ "name": "English", "proficiency": "Fluent" }] }
+  // certifications:   { "items": [{ "name": "...", "duration": "...", "issuing_organization": "...", "credential_id": "" }] }
+  // awards:           { "items": [{ "name": "...", "duration": "...", "description": "..." }] }
+  // volunteer/entries:{ "items": [{ "role": "...", "organization": "...", "duration": "...", "location": "Metropolitan Area", "description": "..." }] }
+}
 
-**IMPORTANT:**
-- Return ONLY JSON (no markdown, no code fences, no extra commentary)
-- Keep ALL original wording for non-PII content
-- Use empty arrays [] or empty strings "" where applicable
-- "piiRemoved" is an integer count of PII items removed
-- Make sure you do not rephrase, reduce, or add extra anything but you can correct spelling mistakes if any which would have occured during text extraction.
-- Make sure to fix errors like :
-  c ustomer -> customer, E EG-> EEG, T oyota -> Toyota
-- Make VERY SURE in the output we have ALL the content of the resume excelt PII data
-- Never output thigns liek [object], etc
-- If for any of the records if only section exists and if the data inside that is empty ignore that record.
+---
 
+⚠️ IMPORTANT NOTES
+
+- Preserve the original section ordering
+- If a section exists with no content (empty), omit it from the final output
+- Use empty arrays or strings if needed, but never null or undefined
+- Do NOT return: [object Object], "undefined", or broken JSON
+- NEVER include: Markdown, code fences, or commentary — just pure JSON
+- Do NOT hallucinate new sections, skills, or roles — only include what’s actually in the input
+
+---
+
+📝 Input Placeholder
 Here is the resume text to anonymize:
 
 {RESUME_TEXT}
