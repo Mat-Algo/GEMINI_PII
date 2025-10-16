@@ -52,64 +52,71 @@ class AnonymizeRequest(BaseModel):
 PROMPT_TEMPLATE = """
 You are a professional resume anonymizer. Your task is to remove ALL personally identifiable information (PII) from the following resume while preserving ALL other content exactly as written.
 
-**CRITICAL RULES:**
-1. Remove ONLY these PII elements:
-   - Person's full name (first name, middle name, last name)
+---
+
+**CRITICAL RULES**
+
+1. REMOVE ONLY the following PII elements:
+   - Full name (first name, middle name, last name)
    - Email addresses (all formats)
    - Phone numbers (all formats and countries)
    - Physical addresses (street, city, state, zip/postal codes)
-   - URLs and domains (LinkedIn, GitHub, personal websites, portfolio links, etc.)
-   - Social media handles (Twitter, Instagram, etc.)
+   - Website URLs and domains (LinkedIn, GitHub, personal sites, etc.)
+   - Social media handles (Twitter, Instagram, Stack Overflow, etc.)
    - Government IDs (SSN, Aadhaar, PAN, Passport numbers)
-   - Any credential IDs or license numbers
-   - Geographic locations that are personally identifying (replace city names with just "Major City" or "Metropolitan Area")
+   - Credential or certification IDs
+   - Contact names and phone numbers (e.g. “Raj Abhyanker – +1 (408) 398-3126”)
+   - Any specific city or neighborhood name (replace with "Metropolitan Area")
 
-2. PRESERVE EXACTLY (do not modify or remove):
-   - All job titles and roles
-   - All company names (keep them as-is)
-   - All university/college names (keep them as-is)
+2. PRESERVE EXACTLY:
+   - All job titles, company names, and roles
+   - All university and school names
    - All degree names and majors
-   - All skills, technologies, and tools
+   - All skills, technologies, frameworks, tools
    - All project descriptions and achievements
-   - All dates and durations
-   - All metrics, numbers, and percentages (except PII numbers)
+   - All metrics, statistics, percentages
+   - All bullet points and line formatting
    - All certifications and course names
-   - All bullet points and descriptions word-for-word
+   - All dates and durations
 
-3. OUTPUT FORMAT (STRICT JSON):
-Return ONLY valid JSON with:
-- A dynamic sections array that mirrors the original resume’s section titles and order exactly as they appear (preserve casing and punctuation). Each element has:
-  {
-    "title": "Section title exactly from resume",
-    "type": "experience|education|projects|skills|languages|certifications|awards|volunteer|paragraphs|bullets|entries",
-    // Content shape depends on type:
-    // paragraphs: { "paragraphs": [ "para1", "para2", ... ] }
-    // bullets:    { "bullets": [ "bullet1", "bullet2", ... ] }
-    // experience: { "items": [ { "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["...", "..."] } ] }
-    // education:  { "items": [ { "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." } ] }
-    // projects:   { "items": [ { "name": "...", "description": "...", "technologies": ["...","..."] } ] }
-    // skills:     { "technical": ["..."], "other": ["..."] }
-    // languages:  { "bullets": ["Language: Proficiency", "..."] }
-    // certifications/awards/volunteer/publications may use "bullets" or "items" with sensible fields:
-    // entries:    { "items": [ { "title"|"name"|"role": "...", "organization"|"institution": "...", "duration": "...", "location": "Metropolitan Area", "description": "...", "technologies": ["..."] } ] }
-  }
+3. CORRECT and NORMALIZE:
+   - Fix any split words or spacing issues from OCR/text extraction
+     e.g., "c ustomer" → "customer", "T oyota" → "Toyota", "Josh Skill, bsc YIT" → proper tokens
+   - Fix common typos or broken lines where possible
+   - Do not rephrase meaningful content
 
-- AND include the legacy fields for backward compatibility:
-  "summary", "experience", "education", "skills", "projects", "certifications", "awards", "publications", "languages", "volunteer", "piiRemoved"
+---
 
-Notes:
-- It is OK if the dynamic sections duplicate content that also appears in the legacy fields.
-- If a section in the resume does not fit any known type, set "type": "bullets" with its bullet list, or "type": "paragraphs" with text blocks.
-- Preserve the resume’s original section order under "sections".
+**OUTPUT FORMAT (STRICT JSON)**
+
+Return **ONLY valid JSON** containing:
+- `sections`: an array that preserves **original section titles and order** from the resume
+- `summary`, `experience`, `education`, `skills`, `projects`, `certifications`, `awards`, `publications`, `languages`, `volunteer` — legacy fields for compatibility
+- `piiRemoved`: integer number of PII items redacted
+
+Each section in `sections` must include:
+```json
+{
+  "title": "Exact Section Title From Resume",
+  "type": "experience|education|projects|skills|languages|certifications|awards|volunteer|paragraphs|bullets|entries",
+  // Content shape based on type:
+  // paragraphs: { "paragraphs": ["..."] }
+  // bullets: { "bullets": ["..."] }
+  // experience: { "items": [ { "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["..."] } ] }
+  // education: { "items": [ { "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." } ] }
+  // projects: { "items": [ { "name": "...", "description": "...", "technologies": ["..."] } ] }
+  // skills: { "technical": ["..."], "other": ["..."] }
+  // entries: { "items": [ { "title|name|role": "...", "organization": "...", "duration": "...", "description": "...", "location": "Metropolitan Area" } ] }
+}
+
 
 **IMPORTANT:**
 - Return ONLY JSON (no markdown, no code fences, no extra commentary)
+- Preserve the resume’s original section order under "sections".
 - Keep ALL original wording for non-PII content
 - Use empty arrays [] or empty strings "" where applicable
 - "piiRemoved" is an integer count of PII items removed
 - Make sure you do not rephrase, reduce, or add extra anything but you can correct spelling mistakes if any which would have occured during text extraction.
-- Make sure to fix errors like :
-  c ustomer -> customer, E EG-> EEG, T oyota -> Toyota
 
 Here is the resume text to anonymize:
 
