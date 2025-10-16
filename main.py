@@ -66,7 +66,7 @@ You are a professional resume anonymizer. Your task is to remove ALL personally 
 - Government-issued IDs (SSN, Aadhaar, PAN, Passport numbers)
 - Credential or certification IDs (e.g. Coursera, Google IDs)
 - Contact references (e.g. “Raj Abhyanker – +1 (408) 398-3126”)
-- Specific location mentions (city/town/neighborhood) → replace with "Metropolitan Area"
+- Specific location mentions (city/town/neighborhood) 
 
 2. PRESERVE EXACTLY (if present):
 - All job titles, company names, and role designations
@@ -150,6 +150,7 @@ Each object inside sections must follow this structure:
 - Use empty arrays or strings if needed, but never null or undefined
 - Do NOT return: [object Object], "undefined", or broken JSON
 - NEVER include: Markdown, code fences, or commentary — just pure JSON
+- Do not add anythign from your side but make SURE EVERYTHING from the resume is included except PII
 - Do NOT hallucinate new sections, skills, or roles — only include what’s actually in the input
 
 ---
