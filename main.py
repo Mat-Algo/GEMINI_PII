@@ -219,6 +219,7 @@ def anonymize(payload: AnonymizeRequest):
             raise HTTPException(status_code=500, detail="Missing required fields in Gemini response")
 
         candidate_name = parsed.get("candidateName", "").strip()
+        print(candidate_name)
         return JSONResponse({
             "candidateName": candidate_name,
             "sections": parsed["sections"],
