@@ -57,7 +57,6 @@ You are a professional resume anonymizer. Your task is to remove ALL personally 
 🔒 CRITICAL RULES
 
 1. REMOVE ONLY the following PII elements:
-- Full name (first name, middle name, last name)
 - Email addresses (all formats)
 - Phone numbers (all formats and countries)
 - Physical addresses (street, city, state, zip/postal codes)
@@ -104,6 +103,7 @@ Return a single, valid JSON object with the following fields:
 
 Top-Level Keys:
 {
+  "candidateName": ""
   "sections": [ ... ],
   "summary": [],
   "experience": [],
@@ -117,7 +117,9 @@ Top-Level Keys:
   "volunteer": [],
   "piiRemoved": 0
 }
-
+- candidateName: The original candidate’s full name (exactly as written) before anonymization.
+  * If no name is found, return an empty string.
+  * Do NOT anonymize this field — extract it *before* redaction.
 - sections: List of parsed resume sections in original order
 - piiRemoved: Integer count of PII elements that were redacted
 - Legacy fields (summary, experience, etc.) should mirror data from sections where applicable for compatibility
@@ -216,7 +218,9 @@ def anonymize(payload: AnonymizeRequest):
         if "sections" not in parsed or "piiRemoved" not in parsed:
             raise HTTPException(status_code=500, detail="Missing required fields in Gemini response")
 
+        candidate_name = parsed.get("candidateName", "").strip()
         return JSONResponse({
+            "candidateName": candidate_name,
             "sections": parsed["sections"],
             "piiRemoved": parsed["piiRemoved"]
         })
