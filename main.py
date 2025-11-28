@@ -159,6 +159,22 @@ Each object inside sections must follow this structure:
 - Do NOT hallucinate new sections, skills, or roles — only include what’s actually in the input
 - MANDATORY: You MUST always return sections in this exact order: summary, education, experience, projects, skills, certifications, awards, publications, languages, volunteer, etc
 - Do not use emdashes,-, emojis in the output.
+- When generating the final JSON, do NOT rely on the order of the parsed sections to populate the legacy fields.
+    Step 1 — Parse everything normally (in original resume order) into sections[]
+    Step 2 — Build the legacy fields in the required global order using a mapping like:
+    "summary"     ← from any section titled Summary/About/Intro
+    "education"   ← from any section titled Education/Academics
+    "experience"  ← from Work Experience/Work/Professional
+    "projects"    ← from Projects
+    "skills"      ← from Skills/Technical Skills
+    "certifications" ← from Certifications/Licenses
+    "awards"      ← from Awards/Honors
+    "publications" ← from Publications
+    "languages"   ← from Languages
+    "volunteer"   ← from Organizations/Volunteer/Leadership
+    ""
+    ""
+    etc (other remaining fields)
 
 
 📝 Input Placeholder
