@@ -2,6 +2,7 @@ import os
 import re
 import json
 from typing import Any, Dict
+import uvicorn
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,8 @@ from starlette.responses import JSONResponse
 # New Gemini SDK
 from google import genai
 from google.genai import types
+from fastapi import FastAPI, HTTPException, Header
+from starlette.responses import JSONResponse
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -120,8 +123,7 @@ Top-Level Keys:
 - candidateName: The original candidate’s full name (exactly as written) before anonymization.
   * If no name is found, return an empty string.
   * Do NOT anonymize this field — extract it *before* redaction.
-- sections: List of parsed resume sections in original order
-- piiRemoved: Integer count of PII elements that were redacted
+- sections: List of parsed resume sections in original orderåß
 - Legacy fields (summary, experience, etc.) should mirror data from sections where applicable for compatibility
 
 EACH SECTION OBJECT:
@@ -181,14 +183,20 @@ def health():
     return {"status": "ok", "message": "Resume Anonymizer API is running"}
 
 @app.post("/api/anonymize")
-def anonymize(payload: AnonymizeRequest):
+def anonymize(
+    payload: AnonymizeRequest,
+    authorization: str = Header(None),
+    org_id: str = Header(None)
+):
+    if not authorization:
+        raise HTTPException(401, "Missing Authorization header")
+
+    if not org_id:
+        raise HTTPException(400, "Missing org-id header")
+
     resume_text = payload.resumeText
-
-    if not resume_text or not isinstance(resume_text, str):
-        raise HTTPException(status_code=400, detail="Invalid request: resumeText is required")
-
-    if len(resume_text.strip()) < 50:
-        raise HTTPException(status_code=400, detail="Resume text is too short")
+    if not resume_text or len(resume_text.strip()) < 50:
+        raise HTTPException(400, "Invalid resumeText")
 
     prompt = PROMPT_TEMPLATE.replace("{RESUME_TEXT}", resume_text)
 
@@ -203,37 +211,29 @@ def anonymize(payload: AnonymizeRequest):
             ),
         )
 
-        generated_text = getattr(response, "text", None)
-        if not generated_text:
+        text = getattr(response, "text", None)
+        if not text:
             raise RuntimeError("No response text from Gemini")
 
-        cleaned = _strip_code_fences(generated_text)
+        cleaned = _strip_code_fences(text)
+        parsed = json.loads(cleaned)
 
-        try:
-            parsed = json.loads(cleaned)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=500, detail="Failed to parse Gemini response as JSON")
-
-        # Strictly require `sections` and `piiRemoved`
-        if "sections" not in parsed or "piiRemoved" not in parsed:
-            raise HTTPException(status_code=500, detail="Missing required fields in Gemini response")
-
-        candidate_name = parsed.get("candidateName", "").strip()
-        print(candidate_name)
         return JSONResponse({
-            "candidateName": candidate_name,
-            "sections": parsed["sections"],
-            "piiRemoved": parsed["piiRemoved"]
+            "data": {
+                "candidateName": parsed.get("candidateName", ""),
+                "sections": parsed.get("sections", []),
+                "piiRemoved": parsed.get("piiRemoved", 0),
+                "id": "local-test-id",
+                "processedBy": "gemini-local",
+                "processingTime": 1200
+            }
         })
 
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to anonymize resume: {str(e)}")
+        raise HTTPException(500, f"Failed to anonymize resume: {str(e)}")
 
 
 # Local dev entrypoint (Render uses startCommand)
 if __name__ == "__main__":
-    import uvicorn
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
