@@ -123,7 +123,8 @@ Top-Level Keys:
 - candidateName: The original candidate’s full name (exactly as written) before anonymization.
   * If no name is found, return an empty string.
   * Do NOT anonymize this field — extract it *before* redaction.
-- sections: List of parsed resume sections in original orderåß
+- sections: List of parsed resume sections in original order
+- piiRemoved: Integer count of PII elements that were redacted
 - Legacy fields (summary, experience, etc.) should mirror data from sections where applicable for compatibility
 
 EACH SECTION OBJECT:
@@ -156,8 +157,9 @@ Each object inside sections must follow this structure:
 - NEVER include: Markdown, code fences, or commentary — just pure JSON
 - Do not add anything from your side but make SURE EVERYTHING from the resume is included except PII
 - Do NOT hallucinate new sections, skills, or roles — only include what’s actually in the input
+- MANDATORY: You MUST always return sections in this exact order: summary, education, experience, projects, skills, certifications, awards, publications, languages, volunteer, etc
+- Do not use emdashes,-, emojis in the output.
 
----
 
 📝 Input Placeholder
 Here is the resume text to anonymize:
