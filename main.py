@@ -136,8 +136,8 @@ Each object inside sections must follow this structure:
   // Content shape by type:
   // paragraphs:       { "paragraphs": ["..."] }
   // bullets:          { "bullets": ["..."] }
-  // experience:       { "items": [{ "title": "...", "company": "...", "duration": "...", "location": "Metropolitan Area", "responsibilities": ["..."] }] }
-  // education:        { "items": [{ "degree": "...", "institution": "...", "duration": "...", "location": "Metropolitan Area", "details": "..." }] }
+  // experience:       { "items": [{ "title": "...", "company": "...", "duration": "...", "responsibilities": ["..."] }] }
+  // education:        { "items": [{ "degree": "...", "institution": "...", "duration": "...", "details": "..." }] }
   // projects:         { "items": [{ "name": "...", "description": "...", "technologies": ["..."] }] }
   // skills:           { "technical": ["..."], "other": ["..."] }
   // languages:        { "items": [{ "name": "English", "proficiency": "Fluent" }] }
@@ -175,6 +175,13 @@ Each object inside sections must follow this structure:
     ""
     ""
     etc (other remaining fields)
+
+### ⚠️ FINAL COMPLIANCE CHECK
+Before outputting, verify:
+1.  Are there any Em dashes (—)? -> Change to (-).
+2.  Are there any double bullets? -> Fix them.
+3.  Is the PII (phones, emails, links, address) gone? -> Yes.
+4.  Is the output valid JSON? -> Yes.
 
 
 📝 Input Placeholder
