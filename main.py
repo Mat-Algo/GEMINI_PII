@@ -175,6 +175,8 @@ Each object inside sections must follow this structure:
     ""
     ""
     etc (other remaining fields)
+- You are foribidden from using • or - anywhere. Do not show the duration of months
+- It is CRUCIAL that you generate the json in the global order mentioned below ALWAYS
 
 ### ⚠️ FINAL COMPLIANCE CHECK
 Before outputting, verify:
