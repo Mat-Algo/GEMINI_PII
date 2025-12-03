@@ -55,8 +55,6 @@ class AnonymizeRequest(BaseModel):
 PROMPT_TEMPLATE = """
 You are a professional resume anonymizer. Your task is to remove ALL personally identifiable information (PII) from the following resume while preserving ALL non-PII content exactly as written.
 
----
-
 🔒 CRITICAL RULES
 
 1. REMOVE ONLY the following PII elements:
@@ -343,23 +341,43 @@ You MUST reorder them to:
 - MUST include ALL other sections from the resume, even if not in the standard list
 - For non-standard sections (e.g., "Patents", "Conferences", "Interests"), preserve their original title and structure
 - If you encounter a section type not defined above, use type "entries" or "paragraphs" or "bullets" as appropriate
-- Do NOT use em dashes (—), use hyphens (-)
-- Do NOT use bullet characters (•)
+- CRITICAL: Do NOT use em dashes (—), use regular hyphens (-) for date ranges ONLY (e.g., "2020 - 2022")
+- CRITICAL: Do NOT use bullet characters (•) anywhere in the output
+- CRITICAL: Do NOT prefix list items with dashes (-) or any other symbols - return plain text strings in arrays
+- CRITICAL: When parsing responsibilities/bullets that start with "- " or "• ", remove these prefixes completely
 - Do NOT include null values - use empty strings "" or empty arrays []
 - Return ONLY valid JSON, no markdown, no code fences, no commentary
 - Do not hallucinate any information not in the original resume
 - candidateName should be the person's full name as it appears at the top of the resume
 - PRESERVE ALL CONTENT except PII - missing any section content is a critical error
 
+FORMATTING EXAMPLES:
+
+WRONG:
+"responsibilities": [
+  "- Streamlined internal processes",
+  "• Led a team of 10 engineers"
+]
+
+CORRECT:
+"responsibilities": [
+  "Streamlined internal processes",
+  "Led a team of 10 engineers"
+]
+
+WRONG: "duration": "July 2021 – December 2022"
+CORRECT: "duration": "July 2021 - December 2022"
+
 ### ⚠️ FINAL COMPLIANCE CHECK
 Before outputting, verify:
 1. Are standard sections in the correct order (Summary, Education, Experience, Projects, Skills, Certs, Awards, Pubs, Languages, Volunteer)?
 2. Are ALL other sections included after the standard ones?
 3. Is there any "Contact" section? (Remove it)
-4. Are there any Em dashes (—)? (Change to -)
-5. Is the PII (phones, emails, links, addresses) gone?
-6. Is ALL non-PII content from the original resume preserved?
-7. Is the output valid JSON?
+4. Have you removed ALL bullet characters (•) and dash prefixes (-) from list items?
+5. Are em dashes (—) replaced with regular hyphens (-)?
+6. Is the PII (phones, emails, links, addresses) gone?
+7. Is ALL non-PII content from the original resume preserved?
+8. Is the output valid JSON?
 
 📝 Here is the resume text to anonymize:
 
