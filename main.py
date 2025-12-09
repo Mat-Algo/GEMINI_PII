@@ -55,6 +55,8 @@ class AnonymizeRequest(BaseModel):
 PROMPT_TEMPLATE = """
 You are a professional resume anonymizer. Your task is to remove ALL personally identifiable information (PII) from the following resume while preserving ALL non-PII content exactly as written.
 
+---
+
 🔒 CRITICAL RULES
 
 1. REMOVE ONLY the following PII elements:
@@ -256,7 +258,7 @@ SECTION TYPE DEFINITIONS:
 
 **awards**: For honors and awards
 {
-  "title": "Honors-Awards",
+  "title": "Honors/Awards", (Choose the right title)
   "type": "awards",
   "items": [
     {
@@ -350,6 +352,13 @@ You MUST reorder them to:
 - Do not hallucinate any information not in the original resume
 - candidateName should be the person's full name as it appears at the top of the resume
 - PRESERVE ALL CONTENT except PII - missing any section content is a critical error
+- You MUST NOT create a section unless the resume text contains actual content for that section.
+- If the resume does not include meaningful content for a section, completely omit that section from the output.
+- Do NOT output empty sections and do NOT output section titles without content.
+- If a section exists but contains no extractable non-PII content, OMIT the section entirely instead of outputting empty arrays or empty strings.
+- Do NOT infer or assume any additional sections. Only create a section if the resume contains a clear heading or identifiable grouped content.
+
+
 
 FORMATTING EXAMPLES:
 
